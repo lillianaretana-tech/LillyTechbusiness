@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LillyTech Asset Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">LT</div>
+        <div>
+          <h1>LillyTech</h1>
+          <p>Asset Manager</p>
+        </div>
+      </div>
+
+      <nav class="nav-list" aria-label="Secciones principales">
+        <button class="nav-item active" data-section="dashboard">Dashboard</button>
+        <button class="nav-item" data-section="inventory">Inventario</button>
+        <button class="nav-item" data-section="locations">Ubicaciones</button>
+        <button class="nav-item" data-section="access">Accesos</button>
+        <button class="nav-item" data-section="technical">Tecnologias</button>
+        <button class="nav-item" data-section="dependencies">Dependencias</button>
+        <button class="nav-item" data-section="costs">Costos</button>
+        <button class="nav-item" data-section="clients">Clientes</button>
+        <button class="nav-item" data-section="tasks">Pendientes</button>
+        <button class="nav-item" data-section="docs">Documentacion</button>
+        <button class="nav-item" data-section="backup">Respaldo</button>
+      </nav>
+
+      <div class="sidebar-card">
+        <span class="status-dot"></span>
+        <div>
+          <strong>Centro de control activo</strong>
+          <p>Inventario local listo para migrar a Supabase.</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Centro de Control de Aplicaciones, Automatizaciones y Recursos</p>
+          <h2>LillyTech Asset Manager</h2>
+        </div>
+        <div class="topbar-actions">
+          <label class="search-box" for="globalSearch">
+            <span>Busqueda global</span>
+            <input id="globalSearch" type="search" placeholder="Nombre, cliente, URL, tecnologia, categoria...">
+          </label>
+          <label class="status-filter" for="statusFilter">
+            <span>Estado</span>
+            <select id="statusFilter">
+              <option value="">Todos</option>
+              <option>Produccion</option>
+              <option>Pruebas</option>
+              <option>Idea</option>
+              <option>Descontinuado</option>
+            </select>
+          </label>
+          <button class="primary-btn" id="newAssetBtn">Nueva aplicacion</button>
+        </div>
+      </header>
+
+      <section class="command-grid" id="dashboardSection">
+        <div class="metric-card">
+          <span>Total</span>
+          <strong id="totalApps">0</strong>
+          <p>Aplicaciones registradas</p>
+        </div>
+        <div class="metric-card">
+          <span>Produccion</span>
+          <strong id="productionApps">0</strong>
+          <p>Operando en vivo</p>
+        </div>
+        <div class="metric-card">
+          <span>Pruebas</span>
+          <strong id="testingApps">0</strong>
+          <p>En validacion</p>
+        </div>
+        <div class="metric-card">
+          <span>Ideas</span>
+          <strong id="ideaApps">0</strong>
+          <p>Conceptos futuros</p>
+        </div>
+        <div class="metric-card">
+          <span>Descontinuadas</span>
+          <strong id="discontinuedApps">0</strong>
+          <p>Fuera de operacion</p>
+        </div>
+        <div class="metric-card">
+          <span>Clientes activos</span>
+          <strong id="activeClients">0</strong>
+          <p>Clientes o propietarios</p>
+        </div>
+        <div class="metric-card">
+          <span>Costo mensual</span>
+          <strong id="monthlyCost">$0</strong>
+          <p>Servicios de pago</p>
+        </div>
+        <div class="metric-card">
+          <span>Costo anual</span>
+          <strong id="annualCost">$0</strong>
+          <p>Proyeccion anual</p>
+        </div>
+      </section>
+
+      <section class="panel active-section" data-panel="dashboard">
+        <div class="panel-header">
+          <div>
+            <h3>Dashboard ejecutivo</h3>
+            <p>Resumen rapido del ecosistema LillyTech.</p>
+          </div>
+        </div>
+        <div class="dashboard-layout">
+          <div class="panel-block">
+            <h4>Tecnologias mas utilizadas</h4>
+            <div id="techStats" class="stat-list"></div>
+          </div>
+          <div class="panel-block">
+            <h4>Ultimas actualizaciones</h4>
+            <div id="recentUpdates" class="activity-list"></div>
+          </div>
+          <div class="panel-block">
+            <h4>Sin actualizar por mas de 90 dias</h4>
+            <div id="staleApps" class="activity-list"></div>
+          </div>
+          <div class="panel-block">
+            <h4>Estado de costos</h4>
+            <div id="costStats" class="stat-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="inventory">
+        <div class="panel-header">
+          <div>
+            <h3>Inventario de aplicaciones</h3>
+            <p>Primera fase: nombre, URL, categoria, estado, cliente, tecnologia y descripcion.</p>
+          </div>
+          <button class="secondary-btn" id="sampleDataBtn">Cargar ejemplo</button>
+        </div>
+        <div id="assetList" class="asset-list"></div>
+      </section>
+
+      <section class="panel" data-panel="locations">
+        <div class="panel-header">
+          <div>
+            <h3>Ubicaciones tecnicas</h3>
+            <p>Repositorios, hosting, automatizaciones, archivos y plataformas externas.</p>
+          </div>
+        </div>
+        <div id="locationsList" class="detail-list"></div>
+      </section>
+
+      <section class="panel" data-panel="access">
+        <div class="panel-header">
+          <div>
+            <h3>Accesos</h3>
+            <p>Usuarios, correos, API keys, MFA y notas privadas.</p>
+          </div>
+        </div>
+        <div class="security-note">Recomendacion: no ingreses contrasenas ni API keys hasta tener completo el inventario basico.</div>
+        <div id="accessList" class="detail-list"></div>
+      </section>
+
+      <section class="panel" data-panel="technical">
+        <div class="panel-header">
+          <div>
+            <h3>Tecnologias utilizadas</h3>
+            <p>Stack tecnologico visible por proyecto.</p>
+          </div>
+        </div>
+        <div id="technicalList" class="detail-list"></div>
+      </section>
+
+      <section class="panel" data-panel="dependencies">
+        <div class="panel-header">
+          <div>
+            <h3>Dependencias</h3>
+            <p>Servicios que debes revisar cuando algo falle.</p>
+          </div>
+        </div>
+        <div id="dependenciesList" class="detail-list"></div>
+      </section>
+
+      <section class="panel" data-panel="costs">
+        <div class="panel-header">
+          <div>
+            <h3>Control de costos</h3>
+            <p>Costos mensuales, anuales y estado de pago.</p>
+          </div>
+        </div>
+        <div id="costsList" class="detail-list"></div>
+      </section>
+
+      <section class="panel" data-panel="clients">
+        <div class="panel-header">
+          <div>
+            <h3>Clientes y propietarios</h3>
+            <p>Para quien fue creada cada solucion y quien la administra.</p>
+          </div>
+        </div>
+        <div id="clientsList" class="detail-list"></div>
+      </section>
+
+      <section class="panel" data-panel="tasks">
+        <div class="panel-header">
+          <div>
+            <h3>Pendientes</h3>
+            <p>Mejoras, bugs, ideas futuras y proximas versiones.</p>
+          </div>
+        </div>
+        <div id="tasksList" class="detail-list"></div>
+      </section>
+
+      <section class="panel" data-panel="docs">
+        <div class="panel-header">
+          <div>
+            <h3>Documentacion</h3>
+            <p>Informacion para entender cualquier aplicacion incluso un ano despues.</p>
+          </div>
+        </div>
+        <div id="docsList" class="detail-list"></div>
+      </section>
+
+      <section class="panel" data-panel="backup">
+        <div class="panel-header">
+          <div>
+            <h3>Respaldos</h3>
+            <p>Exporta, importa y registra la ultima copia de seguridad.</p>
+          </div>
+        </div>
+        <div class="backup-grid">
+          <button class="primary-btn" id="exportJsonBtn">Exportar JSON</button>
+          <button class="secondary-btn" id="exportCsvBtn">Exportar Excel</button>
+          <button class="secondary-btn" id="fullBackupBtn">Copia completa</button>
+          <label class="import-card">
+            <span>Importar respaldo</span>
+            <input id="importFile" type="file" accept=".json,application/json">
+          </label>
+        </div>
+        <div class="backup-status" id="backupStatus">Ultimo respaldo: sin registrar</div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="assetDialog">
+    <form id="assetForm" class="asset-form">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">Registro maestro</p>
+          <h3 id="dialogTitle">Nueva aplicacion</h3>
+        </div>
+        <button class="icon-btn" type="button" id="closeDialogBtn" aria-label="Cerrar">x</button>
+      </div>
+
+      <input type="hidden" id="assetId">
+
+      <div class="phase-banner">Fase 1 recomendada: completa primero nombre, URL, categoria, estado, cliente, tecnologia y descripcion.</div>
+
+      <div class="form-grid">
+        <label>Nombre de la aplicacion
+          <input id="name" required placeholder="Ej. Profesor Ingles">
+        </label>
+        <label>Categoria
+          <input id="category" placeholder="IA, automatizacion, web app...">
+        </label>
+        <label>Fecha de creacion
+          <input id="createdAt" type="date">
+        </label>
+        <label>Estado visual
+          <select id="status">
+            <option>Produccion</option>
+            <option>Pruebas</option>
+            <option>Idea</option>
+            <option>Descontinuado</option>
+          </select>
+        </label>
+      </div>
+
+      <label>Descripcion funcional
+        <textarea id="description" rows="3" placeholder="Que hace, para quien sirve y que problema resuelve."></textarea>
+      </label>
+
+      <details open>
+        <summary>Ubicaciones tecnicas</summary>
+        <div class="form-grid">
+          <label>URL publica <input id="publicUrl" type="url"></label>
+          <label>URL demo <input id="demoUrl" type="url"></label>
+          <label>URL privada <input id="privateUrl" type="url"></label>
+          <label>GitHub Repository <input id="githubRepoUrl" type="url"></label>
+          <label>GitHub Pages <input id="githubPagesUrl" type="url"></label>
+          <label>Replit <input id="replitUrl" type="url"></label>
+          <label>Supabase <input id="supabaseUrl" type="url"></label>
+          <label>Apps Script <input id="appsScriptUrl" type="url"></label>
+          <label>Google Drive <input id="googleDriveUrl" type="url"></label>
+          <label>OneDrive <input id="oneDriveUrl" type="url"></label>
+          <label>Canva <input id="canvaUrl" type="url"></label>
+          <label>Make <input id="makeUrl" type="url"></label>
+          <label>Twilio <input id="twilioUrl" type="url"></label>
+          <label>OpenAI <input id="openAiUrl" type="url"></label>
+          <label>Google Sheets <input id="sheetsUrl" type="url"></label>
+        </div>
+      </details>
+
+      <details>
+        <summary>Clientes y propietarios</summary>
+        <div id="useCheckboxes" class="checkbox-grid"></div>
+        <div class="form-grid">
+          <label>Cliente
+            <input id="clientName" placeholder="SBM, Uber, McKinsey, Uso Personal...">
+          </label>
+          <label>Propietario
+            <input id="owner" placeholder="Persona o area responsable">
+          </label>
+          <label>Proyecto relacionado
+            <input id="relatedProject" placeholder="Campana, producto o iniciativa">
+          </label>
+        </div>
+      </details>
+
+      <details>
+        <summary>Tecnologias utilizadas</summary>
+        <div id="techCheckboxes" class="checkbox-grid"></div>
+      </details>
+
+      <details>
+        <summary>Dependencias</summary>
+        <div id="dependencyCheckboxes" class="checkbox-grid"></div>
+        <label>Notas de dependencia
+          <textarea id="dependencyNotes" rows="2" placeholder="Ej. Si falla login revisar Supabase Auth."></textarea>
+        </label>
+      </details>
+
+      <details>
+        <summary>Control de costos</summary>
+        <div class="form-grid">
+          <label>Costo mensual USD
+            <input id="monthlyCostInput" type="number" min="0" step="0.01" placeholder="0.00">
+          </label>
+          <label>Costo anual USD
+            <input id="annualCostInput" type="number" min="0" step="0.01" placeholder="0.00">
+          </label>
+          <label>Estado de pago
+            <select id="paymentStatus">
+              <option>Gratis</option>
+              <option>De pago</option>
+              <option>Pagado</option>
+              <option>Pendiente</option>
+              <option>Vencido</option>
+            </select>
+          </label>
+        </div>
+        <label>Notas de costo
+          <textarea id="costNotes" rows="2" placeholder="Ej. OpenAI API $15/mes, Replit $10/mes."></textarea>
+        </label>
+      </details>
+
+      <details>
+        <summary>Accesos sensibles</summary>
+        <div class="security-note">Tercera fase: completa estos campos solo cuando quieras registrar informacion privada.</div>
+        <div class="form-grid">
+          <label>Usuario <input id="username"></label>
+          <label>Correo asociado <input id="email" type="email"></label>
+          <label>Contrasena <input id="password" type="password"></label>
+          <label>API Keys <input id="apiKeys" type="password"></label>
+          <label>MFA
+            <select id="mfaEnabled">
+              <option>No registrado</option>
+              <option>Si</option>
+              <option>No</option>
+            </select>
+          </label>
+          <label>Metodo MFA <input id="mfaMethod" placeholder="Google Authenticator, SMS, email..."></label>
+          <label>Ubicacion del MFA <input id="mfaLocation" placeholder="Telefono, cuenta, app..."></label>
+        </div>
+        <label>Notas de acceso
+          <textarea id="accessNotes" rows="2"></textarea>
+        </label>
+      </details>
+
+      <details>
+        <summary>Pendientes</summary>
+        <div class="task-input-row">
+          <input id="taskText" placeholder="Nueva mejora, bug o idea futura">
+          <select id="taskType">
+            <option>Mejora</option>
+            <option>Bug</option>
+            <option>Idea futura</option>
+            <option>Proxima version</option>
+          </select>
+          <button class="secondary-btn" type="button" id="addTaskBtn">Agregar</button>
+        </div>
+        <div id="formTasks" class="form-task-list"></div>
+      </details>
+
+      <details>
+        <summary>Documentacion</summary>
+        <label>Como funciona <textarea id="howItWorks" rows="2"></textarea></label>
+        <label>Como actualizar <textarea id="howToUpdate" rows="2"></textarea></label>
+        <label>Problemas conocidos <textarea id="knownIssues" rows="2"></textarea></label>
+        <label>Proximas mejoras <textarea id="futureImprovements" rows="2"></textarea></label>
+        <label>Donde esta alojado <textarea id="hosting" rows="2"></textarea></label>
+        <label>Instrucciones de recuperacion <textarea id="recovery" rows="2"></textarea></label>
+        <label>Instrucciones de publicacion <textarea id="publishing" rows="2"></textarea></label>
+      </details>
+
+      <div class="dialog-actions">
+        <button class="danger-btn" type="button" id="deleteAssetBtn">Eliminar</button>
+        <span></span>
+        <button class="secondary-btn" type="button" id="cancelDialogBtn">Cancelar</button>
+        <button class="primary-btn" type="submit">Guardar aplicacion</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="emptyTemplate">
+    <div class="empty-state">
+      <strong>No hay registros todavia.</strong>
+      <p>Agrega tu primera aplicacion para iniciar el inventario maestro.</p>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
