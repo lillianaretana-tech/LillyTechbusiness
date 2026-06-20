@@ -2,6 +2,41 @@ const STORAGE_KEY = "lillytech.asset.manager.v2";
 const LEGACY_STORAGE_KEY = "lillytech.asset.manager.v1";
 const BACKUP_KEY = "lillytech.asset.manager.lastBackup";
 
+/* =====================================================================
+   CONFIGURACION SUPABASE  ->  PEGA AQUI TUS DOS DATOS
+   Los encuentras en: Supabase > Project Settings > API
+   - SUPABASE_URL  = "Project URL"
+   - SUPABASE_ANON_KEY = "anon public"
+   ===================================================================== */
+const SUPABASE_URL = "PEGA_AQUI_TU_PROJECT_URL";
+const SUPABASE_ANON_KEY = "PEGA_AQUI_TU_ANON_KEY";
+const SUPABASE_TABLE = "lillytech_assets";
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+
+// Indicador de estado de sincronizacion (esquina). Se crea solo.
+function syncStatus(text, kind = "ok") {
+  let el = document.getElementById("syncStatus");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "syncStatus";
+    el.style.cssText =
+      "position:fixed;bottom:16px;right:16px;z-index:9999;font:600 12px/1.4 Inter,sans-serif;" +
+      "padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.35);transition:opacity .3s;";
+    document.body.appendChild(el);
+  }
+  const colors = {
+    ok: "background:#0d3b34;color:#5eead4;border:1px solid #14b8a6",
+    saving: "background:#3b340d;color:#fde68a;border:1px solid #d4a514",
+    error: "background:#3b0d0d;color:#fca5a5;border:1px solid #ef4444"
+  };
+  el.style.cssText += colors[kind] || colors.ok;
+  el.textContent = text;
+  el.style.opacity = "1";
+  if (kind === "ok") setTimeout(() => { el.style.opacity = "0"; }, 2000);
+}
+
 const TECH_OPTIONS = [
   "GitHub",
   "Supabase",
@@ -69,22 +104,57 @@ const STATUS_ALIASES = {
 };
 
 const DataStore = {
-  load() {
-    const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (!stored) return [];
-    try {
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed.map(normalizeAsset) : [];
-    } catch {
+  // Trae todas las apps del usuario desde Supabase
+  async load() {
+    if (!currentUser) return [];
+    const { data, error } = await sb
+      .from(SUPABASE_TABLE)
+      .select("data")
+      .order("updated_at", { ascending: false });
+    if (error) {
+      console.error("Supabase load:", error);
+      syncStatus("Error al cargar", "error");
       return [];
     }
+    return (data || []).map((row) => normalizeAsset(row.data));
   },
-  save(nextAssets) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextAssets));
+  // Sincroniza TODO el inventario: sube los actuales y borra los que ya no existen
+  async save(nextAssets) {
+    if (!currentUser) return;
+    syncStatus("Guardando...", "saving");
+    try {
+      const rows = nextAssets.map((a) => ({
+        id: a.id,
+        user_id: currentUser.id,
+        data: a,
+        updated_at: a.updatedAt || new Date().toISOString()
+      }));
+
+      if (rows.length) {
+        const { error } = await sb.from(SUPABASE_TABLE).upsert(rows, { onConflict: "id" });
+        if (error) throw error;
+      }
+
+      // Borrar de la nube lo que ya no esta en memoria (deletes / imports)
+      const { data: existing, error: selErr } = await sb.from(SUPABASE_TABLE).select("id");
+      if (selErr) throw selErr;
+      const keep = new Set(nextAssets.map((a) => a.id));
+      const toDelete = (existing || []).map((r) => r.id).filter((id) => !keep.has(id));
+      if (toDelete.length) {
+        const { error: delErr } = await sb.from(SUPABASE_TABLE).delete().in("id", toDelete);
+        if (delErr) throw delErr;
+      }
+
+      syncStatus("Guardado en la nube", "ok");
+    } catch (err) {
+      console.error("Supabase save:", err);
+      syncStatus("Error al guardar", "error");
+      alert("No se pudo guardar en la nube. Revisa tu conexion. Tus cambios siguen en pantalla; vuelve a intentar.");
+    }
   }
 };
 
-let assets = DataStore.load();
+let assets = [];
 let currentTasks = [];
 let visibleSecrets = new Set();
 
@@ -827,8 +897,75 @@ function bindEvents() {
   });
 }
 
+/* ===================== AUTENTICACION ===================== */
+
+async function refreshAfterAuth(user) {
+  currentUser = user;
+  if (user) {
+    document.getElementById("loginOverlay")?.classList.add("hidden");
+    const emailLabel = document.getElementById("loggedUser");
+    if (emailLabel) emailLabel.textContent = user.email || "";
+    syncStatus("Conectando...", "saving");
+    assets = await DataStore.load();
+    render();
+    syncStatus("Sincronizado", "ok");
+  } else {
+    assets = [];
+    document.getElementById("loginOverlay")?.classList.remove("hidden");
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPassword").value;
+  const msg = document.getElementById("loginMsg");
+  if (!email || !pass) { msg.textContent = "Escribe correo y contrasena."; return; }
+  msg.textContent = "Ingresando...";
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { msg.textContent = "Error: " + error.message; return; }
+  msg.textContent = "";
+  await refreshAfterAuth(data.user);
+}
+
+async function doSignup() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPassword").value;
+  const msg = document.getElementById("loginMsg");
+  if (!email || pass.length < 6) { msg.textContent = "Contrasena de al menos 6 caracteres."; return; }
+  msg.textContent = "Creando cuenta...";
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  if (error) { msg.textContent = "Error: " + error.message; return; }
+  if (data.session) {
+    msg.textContent = "";
+    await refreshAfterAuth(data.user);
+  } else {
+    msg.textContent = "Cuenta creada. Revisa tu correo para confirmar y luego inicia sesion.";
+  }
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  await refreshAfterAuth(null);
+}
+
+function bindAuthEvents() {
+  document.getElementById("loginBtn")?.addEventListener("click", doLogin);
+  document.getElementById("signupBtn")?.addEventListener("click", doSignup);
+  document.getElementById("logoutBtn")?.addEventListener("click", doLogout);
+  document.getElementById("loginPassword")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doLogin();
+  });
+}
+
+/* ===================== ARRANQUE ===================== */
+
 renderCheckboxes("techCheckboxes", TECH_OPTIONS, []);
 renderCheckboxes("dependencyCheckboxes", DEPENDENCY_OPTIONS, []);
 renderCheckboxes("useCheckboxes", USE_OPTIONS, []);
 bindEvents();
-render();
+bindAuthEvents();
+
+(async () => {
+  const { data } = await sb.auth.getSession();
+  await refreshAfterAuth(data.session?.user || null);
+})();
