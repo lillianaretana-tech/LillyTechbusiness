@@ -8,8 +8,8 @@ const BACKUP_KEY = "lillytech.asset.manager.lastBackup";
    - SUPABASE_URL  = "Project URL"
    - SUPABASE_ANON_KEY = "anon public"
    ===================================================================== */
-const SUPABASE_URL = "PEGA_AQUI_TU_PROJECT_URL";
-const SUPABASE_ANON_KEY = "PEGA_AQUI_TU_ANON_KEY";
+const SUPABASE_URL = "https://vtbqplzhyhboiindyind.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0YnFwbHpoeWhib2lpbmR5aW5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDkzMzcsImV4cCI6MjA5NzQ4NTMzN30.YVhDdTBrZPj5N528D7yqH8NQmQP1RbrY8OEzJEHYS7o";
 const SUPABASE_TABLE = "lillytech_assets";
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
